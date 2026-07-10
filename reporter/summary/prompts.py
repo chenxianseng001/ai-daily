@@ -1,7 +1,14 @@
-"""AI Daily — 摘要 Prompt 模板
+"""AI Daily — 摘要 Prompt 模板（v2.1.3 主编版）
 
-每个数据源有独立的摘要策略。
-所有输出必须为中文。
+Reporter 扮演 AI 行业主编。
+每总结一条内容，需回答：
+  1. 发生了什么？
+  2. 为什么值得关注？
+  3. 它代表了什么行业趋势？
+  4. 对开发者 / AI Agent / 开源生态 / 企业应用有什么影响？
+
+禁止机械翻译标题。禁止复述原文。禁止只介绍产品功能。
+帮助用户判断：这条新闻值不值得继续花时间了解。
 """
 
 from __future__ import annotations
@@ -9,104 +16,86 @@ from __future__ import annotations
 from typing import Protocol
 
 
-# ── Prompt 构造协议 ───────────────────────────────────────────────────
-
-
-class PromptBuilder(Protocol):
-    """摘要 Prompt 构造器协议。"""
-
-    def build_prompt(self, item: dict, raw_text: str) -> str:
-        ...
-
-    @property
-    def system_prompt(self) -> str:
-        return ""
-
-
-# ── 统一系统提示 ─────────────────────────────────────────────────────
-
 SYSTEM_CORE = (
-    "你是一个专业的中文 AI 资讯摘编助手。你的任务是用自然中文总结以下内容。\n"
-    "规则：\n"
-    "1. 所有输出必须为纯中文。\n"
-    "2. 不是翻译——是阅读原文后，用自己的话重新表达。\n"
-    "3. 每段总结控制在 100~150 字。\n"
-    "4. 最后增加一段「为什么值得关注」，1~2 句话，说明这件事的重要性。\n"
-    "5. 不要输出任何 URL、标签、JSON。\n"
-    "6. 不要使用 AI 套话，直接说重点。\n"
+    "你是一位资深 AI 行业主编。\n"
+    "用中文总结以下信息，回答四个问题：\n"
+    "1. 发生了什么？\n"
+    "2. 为什么值得关注？\n"
+    "3. 代表了什么行业趋势？\n"
+    "4. 对开发者/AI Agent/开源生态/企业应用有什么影响？\n\n"
+    "要求：\n"
+    "- 不是翻译，不是复述原文\n"
+    "- 控制在 100~150 字\n"
+    "- 不输出原文标签或格式\n"
 )
 
 
-# ── 各数据源 Prompt 构造器 ──────────────────────────────────────────
+# ── GitHub ──────────────────────────────────────────────────────────
 
 
 class GitHubPromptBuilder:
-    """GitHub 项目：AI 总结中文输出。"""
-
     @property
     def system_prompt(self) -> str:
         return SYSTEM_CORE + (
-            "阅读以下 GitHub 仓库信息，输出中文总结。\n"
-            "格式要求：\n"
-            "【项目总结】100~150 字：这个项目是做什么的？解决什么问题？适合哪些人？\n"
-            "【为什么关注】1~2 句话说明该项目今日热度高的原因。\n"
+            "重点判断："
+            "这个项目是否适合 AI Agent / MCP？"
+            "是否值得收藏或尝试？"
+            "对开发者有什么实际价值？"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
         title = item.get("title", "")
         desc = item.get("description", "") or ""
         raw = item.get("raw", {}) or {}
-        stars = raw.get("today_stars", 0)
-        total = raw.get("total_stars", 0)
-        lang = raw.get("primary_language", "")
-        return (
-            f"项目名称: {title}\n"
-            f"简介: {desc}\n"
-            f"今日新增 Star: {stars}, 总 Star: {total}\n"
-            f"编程语言: {lang}\n"
-            f"\nREADME 概要:\n{raw_text[:1500]}\n"
-            f"\n请用中文总结。"
-        )
+        stars = raw.get("today_stars", 0) or 0
+        total = raw.get("total_stars", 0) or 0
+        topics = raw.get("topics", [])
+        topic_str = ", ".join(topics[:5]) if topics else ""
+        readme = raw_text[:800] if raw_text else ""
+        parts = [f"仓库: {title}", f"简介: {desc}"]
+        if stars:
+            parts.append(f"今日 {stars} Star (总 {total})")
+        if topic_str:
+            parts.append(f"标签: {topic_str}")
+        if readme:
+            parts.append(f"\nREADME:\n{readme}")
+        return "\n".join(parts)
+
+
+# ── Hacker News ─────────────────────────────────────────────────────
 
 
 class HackerNewsPromptBuilder:
-    """Hacker News：AI 总结中文 + 社区讨论 + 为什么关注。"""
-
     @property
     def system_prompt(self) -> str:
         return SYSTEM_CORE + (
-            "阅读以下 Hacker News 讨论，输出中文总结。\n"
-            "格式要求：\n"
-            "【事件总结】100~150 字：这篇文章/讨论的核心内容是什么？\n"
-            "【社区观点】100 字左右：社区的支持观点、反对观点、争议焦点。\n"
-            "【为什么关注】1~2 句话：为什么这条讨论值得今天关注。\n"
+            "重点判断：这篇文章对整个 AI / 科技行业有什么影响？"
+            "是否代表了值得关注的趋势或风险。"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
         title = item.get("title", "")
         author = item.get("author", "")
         raw = item.get("raw", {}) or {}
-        points = raw.get("score", 0)
-        comments = raw.get("comment_count", 0)
+        points = raw.get("score", 0) or 0
+        comments = raw.get("comment_count", 0) or 0
+        body = raw_text[:1500] if raw_text else ""
         return (
-            f"标题: {title}\n"
-            f"作者: {author}\n"
-            f"Points: {points}, 评论: {comments}\n"
-            f"\n正文:\n{raw_text[:2000]}\n"
-            f"\n请用中文总结。"
+            f"标题: {title}\n作者: {author}\n热度: {points} pts\n"
+            f"\n正文:\n{body}"
         )
 
 
-class ProductHuntPromptBuilder:
-    """Product Hunt：AI 总结中文 + 为什么关注。"""
+# ── Product Hunt ────────────────────────────────────────────────────
 
+
+class ProductHuntPromptBuilder:
     @property
     def system_prompt(self) -> str:
         return SYSTEM_CORE + (
-            "阅读以下产品信息，输出中文总结。\n"
-            "格式要求：\n"
-            "【产品总结】100~150 字：这是什么产品？解决什么问题？适合哪些用户？有什么特色功能？\n"
-            "【为什么关注】1~2 句话：为什么这款产品值得今天关注。\n"
+            "重点判断：这个产品值不值得体验？"
+            "解决了什么真实问题？"
+            "对哪类用户最有价值。"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
@@ -114,87 +103,86 @@ class ProductHuntPromptBuilder:
         tagline = item.get("description", "") or ""
         raw = item.get("raw", {}) or {}
         votes = raw.get("votes_count", 0)
-        return (
-            f"产品名称: {name}\n"
-            f"一句话介绍: {tagline}\n"
-            f"Votes: {votes}\n"
-            f"\n产品描述:\n{raw_text[:2000]}\n"
-            f"\n请用中文总结。"
-        )
+        desc = raw_text[:1200] if raw_text else ""
+        return f"产品: {name}\n一句话: {tagline}\n票数: {votes}\n\n描述:\n{desc}"
+
+
+# ── YouTube — 不生成 AI 摘要 ────────────────────────────────────────
 
 
 class YouTubePromptBuilder:
-    """YouTube 视频：AI 总结中文。"""
-
     @property
     def system_prompt(self) -> str:
-        return SYSTEM_CORE + (
-            "阅读以下视频信息，输出中文总结。\n"
-            "格式要求：\n"
-            "【视频总结】100~150 字：这个视频讲了什么核心内容？\n"
-            "【为什么关注】1~2 句话：为什么值得看。\n"
-        )
+        return ""
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
-        title = item.get("title", "")
-        channel = item.get("author", "")
-        raw = item.get("raw", {}) or {}
-        duration = raw.get("duration_seconds", 0)
-        m, s = divmod(duration, 60)
-        dur_str = f"{m}:{s:02d}" if duration else "?"
-        return (
-            f"视频标题: {title}\n"
-            f"频道: {channel}\n"
-            f"时长: {dur_str}\n"
-            f"\n视频描述:\n{raw_text[:2000]}\n"
-            f"\n请用中文总结。"
-        )
+        return ""
+
+
+# ── Twitter ─────────────────────────────────────────────────────────
 
 
 class TwitterPromptBuilder:
-    """X 推文：AI 总结中文 + 为什么关注。"""
-
     @property
     def system_prompt(self) -> str:
         return SYSTEM_CORE + (
-            "阅读以下推文，输出中文总结。\n"
-            "格式要求：\n"
-            "【内容总结】50~100 字：这条推文的核心里点。\n"
-            "【为什么关注】1 句话：为什么这条推文值得关注。\n"
+            "重点判断：这条推文透露了什么行业信号？"
+            "是否值得关注其背后的趋势。"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
         return (
             f"作者: @{item.get('author', '')}\n"
-            f"\n推文内容:\n{raw_text[:1000]}\n"
-            f"\n请用中文总结。"
+            f"\n内容:\n{raw_text[:800]}"
         )
 
 
-class ChinaAIPromptBuilder:
-    """国产 AI 新闻：AI 总结中文 + 为什么关注。"""
+# ── 国产 AI ─────────────────────────────────────────────────────────
 
+
+class ChinaAIPromptBuilder:
     @property
     def system_prompt(self) -> str:
         return SYSTEM_CORE + (
-            "阅读以下 AI 新闻，输出中文总结。\n"
-            "格式要求：\n"
-            "【新闻总结】100~150 字：这条新闻的核心内容是什么？\n"
-            "【为什么关注】1~2 句话：为什么这条新闻值得关注。\n"
+            "重点判断：这条新闻对国内 AI 行业格局有什么影响？"
+            "是否代表了国产 AI 的新方向。"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
         title = item.get("title", "")
         desc = item.get("description", "") or ""
+        body = raw_text[:1500] if raw_text else desc[:500]
+        return f"标题: {title}\n简介: {desc}\n\n正文:\n{body}"
+
+
+# ── 热点事件标题生成 ────────────────────────────────────────────────
+
+
+class TopEventPromptBuilder:
+    """为事件聚类生成中文标题。"""
+
+    @property
+    def system_prompt(self) -> str:
         return (
-            f"标题: {title}\n"
-            f"简介: {desc}\n"
-            f"\n正文:\n{raw_text[:2000]}\n"
-            f"\n请用中文总结。"
+            "你是一位 AI 资讯主编。\n"
+            "根据以下跨数据源的事件信息，用一句中文概括核心事件。\n"
+            "要求：\n"
+            "- 20~30 个汉字\n"
+            "- 一眼即可理解事件\n"
+            "- 不要使用原标题，用自己的话重新概括\n"
+            "- 只输出标题本身，不要多余字符\n"
+        )
+
+    def build_prompt(self, title: str, source_summary: str, description: str) -> str:
+        return (
+            f"涉及来源: {source_summary}\n"
+            f"原始标题: {title}\n"
+            f"概述: {description[:300]}\n"
+            f"\n请生成一句自然、准确的中文标题（20~30 字）。"
         )
 
 
-# ── 构造器注册表 ─────────────────────────────────────────────────────
+# ── 注册表 ─────────────────────────────────────────────────────────
 
 BUILDERS: dict[str, type] = {
     "github_trending": GitHubPromptBuilder,
@@ -207,7 +195,6 @@ BUILDERS: dict[str, type] = {
 
 
 def get_prompt_builder(source: str) -> PromptBuilder:
-    """获取指定数据源的 Prompt 构造器。"""
     cls = BUILDERS.get(source)
     if cls is None:
         return GitHubPromptBuilder()

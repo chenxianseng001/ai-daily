@@ -35,12 +35,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # 新增数据源只需在此注册：name → Section 实例
 
 SECTIONS: list[BaseSection] = [
-    ChinaAISection(),
-    TwitterSection(),
-    YouTubeSection(),
-    ProductHuntSection(),
-    HackerNewsSection(),
-    GitHubSection(),
+    GitHubSection(),        # 1 — 开发者最关注
+    ChinaAISection(),       # 2 — 国产 AI
+    HackerNewsSection(),    # 3 — 国际讨论
+    ProductHuntSection(),   # 4 — 新产品
+    TwitterSection(),       # 5 — 社交动态
+    YouTubeSection(),       # 6 — 视频（仅标题）
 ]
 
 # ── 默认配置 ──────────────────────────────────────────────────────────
@@ -90,14 +90,36 @@ def generate_toc(active_sections: list[tuple[str, str]]) -> str:
 # ── 今日 AI 三件大事（基于事件聚类） ──────────────────────────────────
 
 
+def _call_llm(prompt: str, system: str, max_tokens: int = 100) -> str:
+    """调用当前 AI Summary Provider 生成一段文本。用于标题重写等。"""
+    from reporter.summary.generator import SummaryGenerator, OpenAICompatibleProvider
+    import os
+    api_key = os.environ.get("AI_SUMMARY_API_KEY", "")
+    provider = os.environ.get("AI_SUMMARY_PROVIDER", "openai")
+    model = os.environ.get("AI_SUMMARY_MODEL", "gpt-4o-mini")
+    from reporter.summary.generator import PROVIDER_REGISTRY
+    cls = PROVIDER_REGISTRY.get(provider, OpenAICompatibleProvider)
+    p = cls(api_key=api_key, model=model)
+    try:
+        return p.chat(system, prompt)
+    except Exception:
+        return ""
+
+
 def generate_top3(all_data: dict[str, list[dict]]) -> str:
-    """基于事件聚类，输出跨源聚合的今日三件大事。"""
+    """基于事件聚类，按行业影响力输出今日三件大事，AI 生成中文标题。"""
     from reporter.event_cluster import EventCluster
+    from reporter.summary.prompts import TopEventPromptBuilder
 
     clusterer = EventCluster()
     events = clusterer.cluster(all_data)
 
-    # 过滤：优先选涉及多个来源的事件，再按热度排序
+    # 排序：跨源 > 关键词权重 > 热度
+    def impact_score(e):
+        kw_weight = min(len(e.top_keywords), 5) * 100 if e.top_keywords else 0
+        return (e.source_count * 10000, kw_weight, e.max_score)
+    events.sort(key=impact_score, reverse=True)
+
     cross_source = [e for e in events if e.source_count >= 2]
     top_events = cross_source[:3] if cross_source else events[:3]
 
@@ -107,21 +129,31 @@ def generate_top3(all_data: dict[str, list[dict]]) -> str:
     for rank, event in enumerate(top_events, 1):
         title = event.title
         source_str = event.source_summary
-        score_str = ""
-        if event.max_score > 0:
-            score_str = f" 🔥 {event.max_score:,}"
+        score_str = f" 🔥 {event.max_score:,}" if event.max_score > 0 else ""
+
+        # AI 生成中文标题（可选，有 API Key 时启用）
+        try:
+            builder = TopEventPromptBuilder()
+            prompt = builder.build_prompt(
+                title, source_str,
+                event.description or event.title
+            )
+            ai_title = _call_llm(
+                prompt, builder.system_prompt, max_tokens=60
+            )
+            if ai_title and len(ai_title) > 5:
+                title = ai_title.strip().strip('"').strip('「」')
+        except Exception:
+            pass
 
         lines.append(f"**{rank}. {title}**")
         lines.append(f"📡 {source_str}{score_str}")
-        if event.top_keywords:
-            lines.append(f"🏷️ {' · '.join(event.top_keywords[:4])}")
         lines.append("")
 
     if not cross_source:
         lines.append("> 今日各数据源事件独立性较强，未发现跨源大事件。")
 
-    lines.append("---")
-    lines.append("")
+    lines.append("---\n")
     return "\n".join(lines)
 
 

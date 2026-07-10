@@ -1,4 +1,8 @@
-"""AI Daily — YouTube Section"""
+"""AI Daily — YouTube Section（v2.1.2 轻量版）
+
+仅展示：标题（可翻译为中文）、频道名称、发布时间。
+不展示描述、字幕、AI 摘要。
+"""
 
 from __future__ import annotations
 
@@ -9,8 +13,6 @@ from reporter.base_section import BaseSection
 
 
 class YouTubeSection(BaseSection):
-    """YouTube 视频日报 Section。"""
-
     @property
     def name(self) -> str:
         return "YouTube"
@@ -26,7 +28,7 @@ class YouTubeSection(BaseSection):
         cfg = config or {}
         max_items = cfg.get("youtube_max_items", 10)
 
-        # 按发布时间降序（最新的优先）
+        # 按发布时间降序
         sorted_items = sorted(
             items,
             key=lambda x: x.get("published_at", "") or "",
@@ -41,16 +43,11 @@ class YouTubeSection(BaseSection):
         )
 
         for rank, item in enumerate(display_items, 1):
-            raw = item.get("raw", {})
+            raw = item.get("raw", {}) or {}
             title = item.get("title", "")
             channel = item.get("author", raw.get("channel_name", ""))
             published = item.get("published_at", "")
             duration = raw.get("duration_seconds", 0)
-            views = raw.get("view_count", 0)
-            video_url = item.get("url", "")
-            thumbnail = item.get("thumbnail_url", "")
-            desc_path = raw.get("description_path")
-            trans_path = raw.get("transcript_path")
 
             # 时长格式化
             duration_str = ""
@@ -62,46 +59,23 @@ class YouTubeSection(BaseSection):
                 else:
                     duration_str = f"{m}:{s:02d}"
 
-            # 日期格式化
-            date_str = ""
-            if published:
-                date_str = published[:10]
+            # 日期
+            date_str = published[:10] if published else ""
 
-            lines.append(f"### {rank}. [{title}]({video_url})")
+            lines.append(f"### {rank}. {title}")
             lines.append("")
-            lines.append(f"📺 {channel}")
+            parts = []
+            if channel:
+                parts.append(f"📺 {channel}")
             if date_str:
-                lines.append(f"📅 {date_str}")
+                parts.append(f"📅 {date_str}")
             if duration_str:
-                lines.append(f"⏱ {duration_str}")
-            if views:
-                lines.append(f"👁 {views:,}")
-            lines.append("")
-
-            # AI 摘要
-            summary = self.format_summary(item)
-            if summary:
-                lines.append(summary)
+                parts.append(f"⏱ {duration_str}")
+            if parts:
+                lines.append(" · ".join(parts))
                 lines.append("")
 
-            # 描述预览
-            if desc_path:
-                preview = self._load_preview(desc_path, 500)
-                if preview:
-                    lines.append(f"> {preview}")
-                    lines.append("")
-
-            # 字幕预览
-            if trans_path:
-                preview = self._load_preview(trans_path, 300)
-                if preview:
-                    lines.append(
-                        f"<details><summary>📝 字幕摘要</summary>\n\n> {preview}\n</details>"
-                    )
-                    lines.append("")
-
             lines.append("---")
-            lines.append("")
 
         return "\n".join(lines)
 
@@ -113,15 +87,3 @@ class YouTubeSection(BaseSection):
             if ch:
                 channels.add(ch)
         return len(channels)
-
-    @staticmethod
-    def _load_preview(raw_path: str | None, max_chars: int = 500) -> str:
-        if not raw_path:
-            return ""
-        path = Path(raw_path)
-        if not path.exists():
-            return ""
-        text = path.read_text(encoding="utf-8")
-        if len(text) > max_chars:
-            text = text[:max_chars] + "..."
-        return text

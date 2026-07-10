@@ -291,6 +291,11 @@ class SummaryGenerator:
           2. 未命中 → 构造 Prompt → 调用 LLM → 写入缓存
           3. 返回摘要文本
         """
+        # 跳过不需要 AI 摘要的数据源
+        SUMMARY_SKIP_SOURCES = {"youtube"}
+        if source in SUMMARY_SKIP_SOURCES:
+            return ""
+
         content_hash = item.get("content_hash", "")
         if not content_hash:
             return ""
@@ -326,8 +331,8 @@ class SummaryGenerator:
         return ""
 
     @staticmethod
-    def _load_raw_text(item: dict) -> str:
-        """从 item 中加载原始内容。"""
+    def _load_raw_text(item: dict, max_chars: int = 1500) -> str:
+        """从 item 中加载原始内容（限制长度）。"""
         raw = item.get("raw", {}) or {}
         raw_paths = [
             raw.get("readme_path"),
@@ -343,10 +348,12 @@ class SummaryGenerator:
                 if path.exists():
                     text = path.read_text(encoding="utf-8")
                     if text.strip():
+                        if len(text) > max_chars:
+                            text = text[:max_chars]
                         return text
         desc = item.get("description", "") or ""
         if desc:
-            return desc
+            return desc[:max_chars]
         return ""
 
     def stats(self) -> dict:
