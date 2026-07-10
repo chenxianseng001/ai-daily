@@ -28,12 +28,13 @@ class HackerNewsSection(BaseSection):
 
         for rank, item in enumerate(items[:max_items], 1):
             title = item.get("title", "")
+            cn_title = self.translate_title(title)
             raw = item.get("raw", {}) or {}
             points = raw.get("score", 0) or 0
             comments = raw.get("comment_count", 0) or 0
             ai_summary = self.format_ai_summary(item)
 
-            lines.append(f"### {rank}. {title}")
+            lines.append(f"### {rank}. {cn_title}")
             lines.append("")
 
             # AI 总结

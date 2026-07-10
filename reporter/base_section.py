@@ -89,6 +89,47 @@ class BaseSection(ABC):
         return ""
 
     @staticmethod
+    def format_github_title(item: dict) -> str:
+        """格式化为 作者/项目名 格式。"""
+        title = item.get("title", "")
+        author = item.get("author", "")
+        if author:
+            return f"{author} / {title}"
+        return title
+
+    @staticmethod
+    def translate_title(title: str, max_chars: int = 30) -> str:
+        """翻译英文标题为自然中文（浅调用，使用当前 AI Provider）。"""
+        if not title or len(title) < 5:
+            return title
+        # 检查是否已经是中文
+        import re
+        chinese_chars = re.findall(r'[\u4e00-\u9fff]', title)
+        if len(chinese_chars) >= 3:
+            return title  # 已有足够中文，不翻译
+
+        # 简短标题直接返回
+        if len(title) < 15:
+            return title
+
+        # 调用 AI 翻译
+        try:
+            import os
+            from reporter.summary.generator import PROVIDER_REGISTRY, OpenAICompatibleProvider
+            api_key = os.environ.get("AI_SUMMARY_API_KEY", "")
+            provider = os.environ.get("AI_SUMMARY_PROVIDER", "openai")
+            model = os.environ.get("AI_SUMMARY_MODEL", "")
+            cls = PROVIDER_REGISTRY.get(provider, OpenAICompatibleProvider)
+            p = cls(api_key=api_key, model=model)
+            system = "你是一个翻译助手。将以下英文标题翻译成自然中文。只输出中文翻译，不要多余字符。不超过20个字。"
+            result = p.chat(system, f"翻译为中文：{title}")
+            if result and len(result) > 3:
+                return result.strip().strip('"').strip('「」')
+        except Exception:
+            pass
+        return title
+
+    @staticmethod
     def twitter_is_original_tweet(text: str) -> bool:
         """判断推文是否为原创（过滤回复、转发等）。"""
         if not text:

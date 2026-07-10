@@ -45,6 +45,7 @@ class YouTubeSection(BaseSection):
         for rank, item in enumerate(display_items, 1):
             raw = item.get("raw", {}) or {}
             title = item.get("title", "")
+            cn_title = self.translate_title(title)
             channel = item.get("author", raw.get("channel_name", ""))
             published = item.get("published_at", "")
             duration = raw.get("duration_seconds", 0)
@@ -62,7 +63,7 @@ class YouTubeSection(BaseSection):
             # 日期
             date_str = published[:10] if published else ""
 
-            lines.append(f"### {rank}. {title}")
+            lines.append(f"### {rank}. {cn_title}")
             lines.append("")
             parts = []
             if channel:

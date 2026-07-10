@@ -34,7 +34,7 @@ class GitHubSection(BaseSection):
             total_stars = raw.get("total_stars", 0) or 0
             ai_summary = self.format_ai_summary(item)
 
-            lines.append(f"### {rank}. {title}")
+            lines.append(f"### {rank}. {self.format_github_title(item)}")
             lines.append("")
 
             # Star 信息
