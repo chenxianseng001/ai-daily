@@ -1,0 +1,58 @@
+# AI Daily — 配置示例
+#
+# 将本文件复制为 config/config.yaml 后使用。
+# 所有数据源默认开启，无需修改即可运行。
+#
+
+# ── 全局设置 ────────────────────────────────────────────────────────
+
+global:
+  log_level: INFO
+
+# ── GitHub Trending ──────────────────────────────────────────────────
+
+github_trending:
+  enabled: true
+
+# ── Hacker News ──────────────────────────────────────────────────────
+
+hacker_news:
+  enabled: true
+  max_items: 10
+
+# ── Product Hunt ─────────────────────────────────────────────────────
+
+product_hunt:
+  enabled: true
+  max_items: 30
+  show_top: 10
+
+# ── YouTube ──────────────────────────────────────────────────────────
+
+youtube:
+  enabled: true
+  max_items: 10
+
+# ── X（Twitter） ─────────────────────────────────────────────────────
+
+twitter:
+  enabled: true
+  max_items: 10
+
+# ── 国产 AI ─────────────────────────────────────────────────────────
+
+china_ai:
+  enabled: true
+  max_items: 10
+
+# ── Reporter 通用配置 ─────────────────────────────────────────────────
+
+reporter:
+  output_dir: output
+
+# ── AI 摘要 ──────────────────────────────────────────────────────────
+
+summary:
+  enabled: true
+  provider: openai
+  api_key: ""          # 设置 AI_SUMMARY_API_KEY 环境变量

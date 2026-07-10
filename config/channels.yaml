@@ -1,0 +1,69 @@
+# AI Daily — YouTube 频道白名单
+#
+# 每个频道包含：
+#   handle: 频道 handle（如 @Fireship），用于 yt-dlp 获取视频（必填）
+#   channel_name: 显示名称（必填）
+#   enabled: 是否启用（可选，默认 true）
+#   max_videos: 每次采集的最大视频数（可选，默认 5）
+
+channels:
+  # ── 官方 ──────────────────────────────────────────────────────────
+  - handle: "@OpenAI"
+    channel_name: OpenAI
+    enabled: true
+    max_videos: 5
+  - handle: "@GoogleDeepMind"
+    channel_name: Google DeepMind
+    enabled: true
+    max_videos: 5
+  - handle: "@anthropic"
+    channel_name: Anthropic
+    enabled: true
+    max_videos: 5
+  - handle: "@VercelHQ"
+    channel_name: Vercel
+    enabled: true
+    max_videos: 5
+
+  # ── 媒体 ──────────────────────────────────────────────────────────
+  - handle: "@mreflow"
+    channel_name: Matt Wolfe
+    enabled: true
+    max_videos: 5
+  - handle: "@aiexplained-official"
+    channel_name: AI Explained
+    enabled: true
+    max_videos: 5
+  - handle: "@AIDailyBrief"
+    channel_name: The AI Daily Brief
+    enabled: true
+    max_videos: 5
+  - handle: "@Fireship"
+    channel_name: Fireship
+    enabled: true
+    max_videos: 5
+
+  # ── 开发者 ────────────────────────────────────────────────────────
+  - handle: "@swillison"
+    channel_name: Simon Willison
+    enabled: true
+    max_videos: 5
+  - handle: "@NetworkChuck"
+    channel_name: NetworkChuck
+    enabled: true
+    max_videos: 5
+
+  # ── 中文（待验证 handle） ───────────────────────────────────────
+  # 以下频道 handle 待确认，暂时禁用
+  # - handle: "@guizang"
+  #   channel_name: 歸藏
+  #   enabled: false
+  #   max_videos: 5
+  # - handle: "@DigitalLifeKazak"
+  #   channel_name: 数字生命卡兹克
+  #   enabled: false
+  #   max_videos: 5
+
+  # ── 待确认 handle ───────────────────────────────────────────────
+  # Google AI (@GoogleAI): 无 videos tab
+  # Microsoft Developer (@msftdevelopers): 404

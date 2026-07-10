@@ -1,0 +1,39 @@
+# AI Daily — 国产 AI 新闻源配置
+
+# ── 媒体源（RSS 优先） ───────────────────────────────────────────────
+
+media_sources:
+  - id: qbitai
+    name: 量子位
+    url: https://www.qbitai.com
+    rss: https://www.qbitai.com/feed
+    type: rss
+    enabled: true
+  - id: 36kr
+    name: 36氪
+    url: https://36kr.com
+    rss: https://36kr.com/feed
+    type: rss
+    filter_keyword: AI                    # 只保留标题含 AI 的条目
+    enabled: true
+  - id: sspai
+    name: 少数派
+    url: https://sspai.com
+    rss: https://sspai.com/feed
+    type: rss
+    filter_keyword: AI
+    enabled: true
+
+  # ── 以下源需页面解析（暂缺稳定 RSS） ───────────────────────────────
+  # 机器之心: rss 不可用，页面解析待实现
+  # IT之家 AI: 页面解析待实现
+
+# ── 企业官方动态 ─────────────────────────────────────────────────────
+# 注意：大多无公开 RSS，需要页面解析
+
+# enterprise_sources:
+#   - id: deepseek
+#     name: DeepSeek
+#     url: https://www.deepseek.com/news
+#     type: html
+#     enabled: false

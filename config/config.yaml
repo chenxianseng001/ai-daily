@@ -1,0 +1,139 @@
+# =============================================================================
+# AI Daily — 全局配置
+# =============================================================================
+# 此文件控制整个 AI Daily 的所有行为。
+# 按数据源分组，每项均可通过环境变量覆盖。
+# 环境变量优先级高于此文件。
+# =============================================================================
+
+# ── 全局设置 ──────────────────────────────────────────────────────────
+
+global:
+  log_level: INFO         # 日志级别：DEBUG / INFO / WARNING / ERROR
+  max_concurrent: 5       # 全局并行采集数
+  request_timeout:
+    connect: 10           # HTTP 连接超时（秒）
+    read: 30              # HTTP 读取超时（秒）
+  max_retries: 3          # HTTP 请求最大重试次数
+
+# ── GitHub Trending ───────────────────────────────────────────────────
+
+github_trending:
+  enabled: true           # 是否启用该数据源
+  token: ""                # GitHub Token（可选，提升 API 配额至 5000 req/h）
+  max_concurrent: 5        # README 下载并发数
+  # Reporter 展示配置
+  show_all: true           # 是否在日报中展示全部项目
+  max_items: 15            # 不展示全部时的最大条数
+
+# ── Hacker News ───────────────────────────────────────────────────────
+
+hacker_news:
+  enabled: true            # 是否启用该数据源
+  top_count: 30            # Top Stories 采集条数
+  best_count: 30           # Best Stories 采集条数
+  new_count: 30            # New Stories 采集条数
+  max_total: 60            # 去重后最大保留条数
+  # Reporter 展示配置
+  max_items: 10            # 日报中展示的 Top N 条数
+
+# ── Product Hunt ──────────────────────────────────────────────────────
+
+product_hunt:
+  enabled: true            # 是否启用该数据源
+  token: ""                # Product Hunt API Token（可选，推荐使用以获得完整数据）
+  max_items: 30            # 最大采集条数
+  # Reporter 展示配置
+  show_top: 10             # 日报中展示的 Top N 条数
+
+# ── YouTube ──────────────────────────────────────────────────────────
+
+youtube:
+  enabled: true            # 是否启用该数据源
+  # Reporter 展示配置
+  max_items: 10            # 日报中展示的最大视频数
+
+# ── X（Twitter） ─────────────────────────────────────────────────────
+
+twitter:
+  enabled: true            # 是否启用该数据源
+  bearer_token: ""          # Twitter API Bearer Token（可选）
+  max_items: 10            # 日报中展示的最大推文数
+
+# ── 国产 AI ──────────────────────────────────────────────────────────
+
+china_ai:
+  enabled: true            # 是否启用该数据源
+  max_items: 10            # 日报中展示的最大新闻数
+
+# ── Reporter 通用配置 ─────────────────────────────────────────────────
+
+reporter:
+  output_dir: output       # 日报输出目录（相对于项目根目录）
+
+# ── AI 摘要 ──────────────────────────────────────────────────────────
+
+summary:
+  enabled: true             # 是否启用 AI 摘要
+
+  # Provider 选择
+  # 内置支持:
+  #   openai       — OpenAI 官方 API
+  #   deepseek     — DeepSeek 官方 API
+  #   openrouter   — OpenRouter（多模型路由）
+  #   ollama       — Ollama 本地模型
+  #   lm_studio    — LM Studio 本地模型
+  #   siliconflow  — SiliconFlow 硅基流动
+  #   gemini       — Google Gemini
+  #   claude       — Anthropic Claude
+  #
+  # 任意 OpenAI 兼容 endpoint:
+  #   设置 provider=openai, 并配置 endpoint 和 api_key
+  provider: openai
+
+  # 模型名称（默认值取决于 provider，通常无需填写）
+  model: ""
+
+  # API Key（或通过 AI_SUMMARY_API_KEY 环境变量设置）
+  api_key: ""
+
+  # 自定义 API 端点（非必需，仅当需要覆盖默认 endpoint 时使用）
+  endpoint: ""
+
+  # ── 配置示例 ──────────────────────────────────────────────────────
+  #
+  # # DeepSeek
+  # provider: deepseek
+  # model: deepseek-chat
+  # api_key: sk-xxx
+  #
+  # # OpenRouter
+  # provider: openrouter
+  # model: openai/gpt-4o-mini
+  # api_key: sk-or-xxx
+  #
+  # # Ollama（本地）
+  # provider: ollama
+  # model: llama3.2
+  # endpoint: http://localhost:11434/v1
+  # # Ollama 通常不需要 api_key，可设为空
+  #
+  # # LM Studio（本地）
+  # provider: lm_studio
+  # model: local-model
+  # endpoint: http://localhost:1234/v1
+  #
+  # # SiliconFlow（硅基流动）
+  # provider: siliconflow
+  # model: Qwen/Qwen2.5-7B-Instruct
+  # api_key: sf-xxx
+  #
+  # # Google Gemini
+  # provider: gemini
+  # model: gemini-2.0-flash
+  # api_key: AIzaXXX
+  #
+  # # Anthropic Claude
+  # provider: claude
+  # model: claude-sonnet-4
+  # api_key: sk-ant-xxx

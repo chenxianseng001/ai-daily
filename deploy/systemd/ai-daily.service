@@ -1,0 +1,22 @@
+[Unit]
+Description=AI Daily — 自动采集与日报生成
+Documentation=https://github.com/your-username/ai-daily
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=YOUR_USER                     # ← 修改为你的用户名
+Group=YOUR_USER                    # ← 修改为你的用户组
+WorkingDirectory=/opt/ai-daily/app # ← 修改为你的部署目录
+ExecStart=/opt/ai-daily/venv/bin/python3 /opt/ai-daily/app/run_daily.py
+                                   #    ^^^ 使用 venv Python
+StandardOutput=journal
+StandardError=journal
+LogRateLimitIntervalSec=0
+TimeoutStartSec=600                # 最长运行 10 分钟
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

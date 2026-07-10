@@ -1,0 +1,50 @@
+# AI Daily — X（Twitter）账号白名单
+#
+# 每个账号包含：
+#   username: Twitter 用户名（不包含 @）（必填）
+#   display_name: 显示名称（可选，默认 username）
+#   enabled: 是否启用（可选，默认 true）
+#   max_tweets: 每次采集的最大推文数（可选，默认 10）
+
+accounts:
+  # ── 官方 ──────────────────────────────────────────────────────────
+  - username: OpenAI
+    display_name: OpenAI
+    enabled: true
+    max_tweets: 10
+  - username: AnthropicAI
+    display_name: Anthropic
+    enabled: true
+    max_tweets: 10
+  - username: vercel
+    display_name: Vercel
+    enabled: true
+    max_tweets: 10
+  - username: cursor_ai
+    display_name: Cursor
+    enabled: true
+    max_tweets: 10
+
+  # ── 开发者 ────────────────────────────────────────────────────────
+  - username: sama
+    display_name: Sam Altman
+    enabled: true
+    max_tweets: 10
+  - username: karpathy
+    display_name: Andrej Karpathy
+    enabled: true
+    max_tweets: 10
+  - username: simonw
+    display_name: Simon Willison
+    enabled: true
+    max_tweets: 10
+
+# ── Nitter 实例列表 ──────────────────────────────────────────────────
+# 采集器按顺序尝试，当前实例不可用时自动切换到下一个。
+# 如果所有实例都不可用，记录日志并跳过 Twitter 采集。
+
+nitter_instances:
+  - https://nitter.net
+  - https://nitter.privacydev.net
+  - https://nitter.1d4.us
+  - https://nitter.kavin.rocks
