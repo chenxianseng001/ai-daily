@@ -176,10 +176,25 @@ def generate_recommendations(all_data: dict[str, list[dict]]) -> str:
     # 跨源事件推荐
     cross_source = [e for e in events if e.source_count >= 2]
     if cross_source:
+        from reporter.summary.prompts import TopEventPromptBuilder
         lines.append("### 🔥 跨源热点\n")
         for event in cross_source[:3]:
+            title = event.title
+            # AI 生成中文标题
+            try:
+                builder = TopEventPromptBuilder()
+                prompt = builder.build_prompt(
+                    title, event.source_summary,
+                    event.description or event.title
+                )
+                ai_title = _call_llm(prompt, builder.system_prompt, max_tokens=60)
+                if ai_title and len(ai_title) > 5:
+                    title = ai_title.strip().strip('"').strip('「」')
+            except Exception:
+                pass
+
             lines.append(
-                f"**{event.title[:80]}** — "
+                f"**{title}** — "
                 f"{event.source_summary}, 热度 {event.max_score:,}"
             )
             if event.description:

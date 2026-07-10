@@ -75,4 +75,4 @@ class ChinaAISection(BaseSection):
                         return text
 
         # 最终保底
-        return "暂无详情"
+        return "暂无可用摘要"
