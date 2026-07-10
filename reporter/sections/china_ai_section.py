@@ -1,4 +1,7 @@
-"""AI Daily — 国产 AI Section — v2.1"""
+"""AI Daily — 国产 AI Section — v2.1.5
+
+AI Summary 失败时必须降级，绝不能空白。
+"""
 
 from __future__ import annotations
 
@@ -36,21 +39,40 @@ class ChinaAISection(BaseSection):
                 lines.append(f"**{source}**")
             lines.append("")
 
-            # AI 总结
-            if ai_summary:
-                lines.append(f"> {ai_summary}")
+            # AI 总结 — 必须非空
+            fallback = self._get_china_ai_fallback(item)
+            display = ai_summary if ai_summary else fallback
+            if display:
+                lines.append(f"> {display}")
                 lines.append("")
-            else:
-                # 从 description 生成简短摘要
-                desc = self.safe_text(item.get("description", ""))
-                if desc and len(desc) > 10:
-                    # 取前 150 字作为摘要
-                    short = desc[:150]
-                    if len(desc) > 150:
-                        short += "..."
-                    lines.append(f"> {short}")
-                    lines.append("")
 
             lines.append("---")
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _get_china_ai_fallback(item: dict) -> str:
+        """当 AI Summary 为空时的降级方案。"""
+        desc = item.get("description", "") or ""
+        desc_clean = BaseSection.safe_text(desc)
+        if desc_clean and len(desc_clean) > 10:
+            short = desc_clean[:150]
+            if len(desc_clean) > 150:
+                short += "..."
+            return short
+
+        # 尝试加载 raw 文件
+        raw = item.get("raw", {}) or {}
+        for key in ("content_path", "text_path", "description_path"):
+            rp = raw.get(key)
+            if rp:
+                from pathlib import Path
+                p = Path(rp)
+                if p.exists():
+                    text = p.read_text(encoding="utf-8", errors="ignore")
+                    text = BaseSection.safe_text(text)[:200]
+                    if text:
+                        return text
+
+        # 最终保底
+        return "暂无详情"

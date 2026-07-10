@@ -39,6 +39,14 @@ class HackerNewsSection(BaseSection):
 
             # AI 总结
             if ai_summary:
+                # 如果评论数为 0，覆盖社区观点，禁止 AI 猜测
+                if comments == 0:
+                    import re as _re
+                    ai_summary = _re.sub(
+                        r'【社区观点】[^】]*?(?=\n【为什么关注】|\n---|$)',
+                        '【社区观点】暂无社区讨论',
+                        ai_summary,
+                    )
                 lines.append(f"> {ai_summary}")
                 lines.append("")
 
