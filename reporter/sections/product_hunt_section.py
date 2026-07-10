@@ -1,4 +1,4 @@
-"""AI Daily — Product Hunt Section"""
+"""AI Daily — Product Hunt Section — v2.1"""
 
 from __future__ import annotations
 
@@ -8,8 +8,6 @@ from reporter.base_section import BaseSection
 
 
 class ProductHuntSection(BaseSection):
-    """Product Hunt 日报 Section。"""
-
     @property
     def name(self) -> str:
         return "Product Hunt"
@@ -21,53 +19,35 @@ class ProductHuntSection(BaseSection):
     def render(self, items: list[dict], config: dict | None = None) -> str:
         if self.should_skip(items):
             return ""
-
         cfg = config or {}
         max_items = cfg.get("ph_max_items", 10)
+        lines = []
 
-        sorted_items = sorted(
-            items, key=lambda x: (x.get("raw_score", 0) or 0), reverse=True
-        )
-        display_items = sorted_items[:max_items]
-
-        lines: list[str] = []
         lines.append(f"## 🚀 Product Hunt\n")
-        lines.append(f"共 {len(sorted_items)} 个产品，展示 Top {len(display_items)}\n")
+        lines.append(f"{self.format_item_count(len(items), max_items)}\n")
 
-        for rank, item in enumerate(display_items, 1):
-            raw = item.get("raw", {})
+        for rank, item in enumerate(items[:max_items], 1):
             name = item.get("title", "")
-            tagline = item.get("description", "") or ""
+            raw = item.get("raw", {}) or {}
             votes = raw.get("votes_count", 0)
-            topics = raw.get("topics", [])
-            makers = raw.get("makers", [])
-            website = raw.get("website_url")
-            ph_url = raw.get("ph_url")
+            ai_summary = self.format_ai_summary(item)
 
             lines.append(f"### {rank}. {name}")
             lines.append("")
-            lines.append(f"{tagline}")
-            lines.append("")
 
-            # AI 摘要
-            summary = self.format_summary(item)
-            if summary:
-                lines.append(summary)
+            # AI 总结
+            if ai_summary:
+                lines.append(f"> {ai_summary}")
                 lines.append("")
 
-            lines.append(f"⭐ **{votes}** votes")
-            if topics:
-                lines.append(f"🏷️ {', '.join(topics[:5])}")
-            if makers:
-                maker_names = [m.get("name", m.get("username", "")) for m in makers[:2]]
-                lines.append(f"👤 {', '.join(maker_names)}")
-            lines.append("")
-            if website:
-                lines.append(f"🔗 [官网]({website})")
-            if ph_url:
-                lines.append(f"[Product Hunt]({ph_url})")
+            # 热度
+            score_str = self.format_raw_score(item)
+            if not score_str:
+                score_str = f"⭐ {votes}" if votes else ""
+            if score_str:
+                lines.append(score_str)
+                lines.append("")
 
             lines.append("---")
-            lines.append("")
 
         return "\n".join(lines)

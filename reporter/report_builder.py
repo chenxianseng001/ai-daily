@@ -238,6 +238,12 @@ def build_report(
 
     cfg = {**DEFAULT_CONFIG, **(config or {})}
 
+    # 从 reporter 配置读取 UX 设置
+    reporter_cfg = cfg.get("reporter", {})
+    cfg["show_links"] = reporter_cfg.get("show_links", False)
+    cfg["summary_length"] = reporter_cfg.get("summary_length", "medium")
+    cfg["show_why_it_matters"] = reporter_cfg.get("show_why_it_matters", True)
+
     # 1. 加载所有数据
     all_data: dict[str, list[dict]] = {}
     source_status: dict[str, str] = {}

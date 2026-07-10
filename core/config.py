@@ -59,6 +59,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     },
     "reporter": {
         "output_dir": "output",
+        "show_links": False,
+        "summary_length": "medium",
+        "translate_to_chinese": True,
+        "show_why_it_matters": True,
     },
 }
 

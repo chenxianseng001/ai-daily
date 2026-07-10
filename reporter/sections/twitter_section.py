@@ -1,16 +1,13 @@
-"""AI Daily — X（Twitter）Section"""
+"""AI Daily — X (Twitter) Section — v2.1"""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from reporter.base_section import BaseSection
 
 
 class TwitterSection(BaseSection):
-    """X（Twitter）推文日报 Section。"""
-
     @property
     def name(self) -> str:
         return "X (Twitter)"
@@ -22,64 +19,45 @@ class TwitterSection(BaseSection):
     def render(self, items: list[dict], config: dict | None = None) -> str:
         if self.should_skip(items):
             return ""
-
         cfg = config or {}
         max_items = cfg.get("twitter_max_items", 10)
+        show_links = self.should_show_link(cfg)
+        lines = []
 
-        sorted_items = sorted(
-            items,
-            key=lambda x: x.get("published_at", "") or "",
-            reverse=True,
-        )
-        display_items = sorted_items[:max_items]
+        # 过滤：只保留原创推文
+        original = []
+        for item in items:
+            text = item.get("description", "") or ""
+            raw = item.get("raw", {}) or {}
+            raw_text = raw.get("text", "") or ""
+            if self.twitter_is_original_tweet(text) or self.twitter_is_original_tweet(raw_text):
+                original.append(item)
 
-        lines: list[str] = []
+        shown = original[:max_items]
+        accounts = set(i.get("author", "") for i in shown)
+
         lines.append(f"## 🐦 X (Twitter)\n")
-        lines.append(f"来自 {self._count_authors(items)} 个账号，展示 {len(display_items)} 条\n")
+        lines.append(f"来自 {len(accounts)} 个账号，{self.format_item_count(len(original), len(shown))}\n")
 
-        for rank, item in enumerate(display_items, 1):
-            raw = item.get("raw", {})
+        for rank, item in enumerate(shown, 1):
             author = item.get("author", "?")
-            text = item.get("description", "") or item.get("title", "")
-            tweet_url = item.get("url", "")
-            published = item.get("published_at", "")
-            tags = item.get("tags", [])
-
-            display_name = tags[0] if tags else author
-
-            # 日期
-            date_str = published[:10] if published else ""
+            ai_summary = self.format_ai_summary(item)
 
             lines.append(f"### {rank}. @{author}")
             lines.append("")
-            lines.append(f"**{display_name}**")
-            if date_str:
-                lines.append(f"📅 {date_str}")
-            lines.append("")
 
-            # AI 摘要
-            summary = self.format_summary(item)
-            if summary:
-                lines.append(summary)
+            # AI 总结
+            if ai_summary:
+                lines.append(f"> {ai_summary}")
                 lines.append("")
 
-            if text:
-                lines.append(f"> {text}")
-                lines.append("")
-
-            if tweet_url:
-                lines.append(f"[🔗 推文]({tweet_url})")
+            # 可选择显示链接
+            if show_links:
+                url = item.get("url", "")
+                if url:
+                    lines.append(f"[🔗 推文]({url})")
+                    lines.append("")
 
             lines.append("---")
-            lines.append("")
 
         return "\n".join(lines)
-
-    @staticmethod
-    def _count_authors(items: list[dict]) -> int:
-        authors = set()
-        for item in items:
-            a = item.get("author")
-            if a:
-                authors.add(a)
-        return len(authors)

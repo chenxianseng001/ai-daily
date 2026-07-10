@@ -70,6 +70,9 @@ china_ai:
 
 reporter:
   output_dir: output       # 日报输出目录（相对于项目根目录）
+  show_links: false        # 是否在日报中显示链接（默认隐藏）
+  summary_length: medium   # 总结长度：short / medium / long
+  show_why_it_matters: true  # 是否显示「为什么值得关注」
 
 # ── AI 摘要 ──────────────────────────────────────────────────────────
 
