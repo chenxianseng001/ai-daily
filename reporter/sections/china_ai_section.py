@@ -41,10 +41,14 @@ class ChinaAISection(BaseSection):
                 lines.append(f"> {ai_summary}")
                 lines.append("")
             else:
-                # 回退到 description
-                desc = self.safe_text(item.get("description", ""))[:200]
-                if desc:
-                    lines.append(f"{desc}")
+                # 从 description 生成简短摘要
+                desc = self.safe_text(item.get("description", ""))
+                if desc and len(desc) > 10:
+                    # 取前 150 字作为摘要
+                    short = desc[:150]
+                    if len(desc) > 150:
+                        short += "..."
+                    lines.append(f"> {short}")
                     lines.append("")
 
             lines.append("---")

@@ -80,8 +80,10 @@ class HackerNewsPromptBuilder:
         points = raw.get("score", 0) or 0
         comments = raw.get("comment_count", 0) or 0
         body = raw_text[:1500] if raw_text else ""
+        cmt_note = "（注意：评论数为 0，请输出【社区观点】暂无社区讨论）" if comments == 0 else ""
         return (
-            f"标题: {title}\n作者: {author}\n热度: {points} pts\n"
+            f"标题: {title}\n作者: {author}\n"
+            f"热度: {points} pts, 评论: {comments}{cmt_note}\n"
             f"\n正文:\n{body}"
         )
 

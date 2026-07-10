@@ -323,6 +323,15 @@ class SummaryGenerator:
                 self._stats["generated"] += 1
                 self.cache.set(content_hash, summary)
                 return summary
+
+            # 一次自动重试
+            logger.debug("[summary] Retry for %s...", source)
+            summary = self.provider.chat(system_prompt, user_prompt)
+            if summary:
+                self._stats["generated"] += 1
+                self.cache.set(content_hash, summary)
+                return summary
+
             self._stats["failed"] += 1
         except Exception as e:
             logger.warning("[summary] Generation failed: %s", e)
