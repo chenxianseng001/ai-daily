@@ -55,6 +55,11 @@ def parse_args():
         default=None,
         help="指定日期（YYYY-MM-DD），默认今天",
     )
+    parser.add_argument(
+        "--no-delivery",
+        action="store_true",
+        help="不投递到飞书",
+    )
     return parser.parse_args()
 
 
@@ -68,9 +73,16 @@ def run():
 
     # 默认：先采集，再报告
     if args.report:
-        # 仅报告
+        # 仅报告 + 投递
         from run_reporter import run as run_reporter
         run_reporter()
+        if not args.no_delivery:
+            logger.info("Phase 3: Delivering to Feishu...")
+            from reporter.delivery.feishu import deliver
+            try:
+                deliver(date_str=args.date)
+            except Exception as e:
+                logger.warning("Delivery failed (non-fatal): %s", e)
     elif args.collect:
         # 仅采集
         from run_collector import run as run_collector
@@ -93,6 +105,15 @@ def run():
         logger.info("Phase 2: Generating report...")
         from run_reporter import run as run_reporter
         run_reporter()
+
+        # Phase 3: 投递到飞书
+        if not args.no_delivery:
+            logger.info("Phase 3: Delivering to Feishu...")
+            from reporter.delivery.feishu import deliver
+            try:
+                deliver(date_str=args.date)
+            except Exception as e:
+                logger.warning("Delivery failed (non-fatal): %s", e)
 
     logger.info("=" * 60)
     logger.info("AI Daily — Done")

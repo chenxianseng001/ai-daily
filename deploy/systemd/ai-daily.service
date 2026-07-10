@@ -14,7 +14,13 @@ ExecStart=/opt/ai-daily/venv/bin/python3 /opt/ai-daily/app/run_daily.py
 StandardOutput=journal
 StandardError=journal
 LogRateLimitIntervalSec=0
-TimeoutStartSec=600                # 最长运行 10 分钟
+TimeoutStartSec=600
+
+# 飞书投递配置（可选）
+#Environment=FEISHU_APP_ID=cli_your_app_id
+#Environment=FEISHU_APP_SECRET=your_app_secret
+#Environment=FEISHU_HOME_CHANNEL=oc_your_chat_id
+
 NoNewPrivileges=true
 PrivateTmp=true
 
