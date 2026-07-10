@@ -1,6 +1,6 @@
 [Unit]
 Description=AI Daily — 自动采集与日报生成
-Documentation=https://github.com/your-username/ai-daily
+Documentation=https://github.com/chenxianseng001/ai-daily
 After=network-online.target
 Wants=network-online.target
 
