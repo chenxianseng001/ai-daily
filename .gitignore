@@ -19,7 +19,15 @@ state/
 
 # Dotenv (contains secrets)
 .env
+.env.*
 .env.local
+
+# Secrets & Keys
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
 
 # IDE
 .vscode/
@@ -34,5 +42,5 @@ Thumbs.db
 # Pytest
 .pytest_cache/
 
-# Deployment-specific
+# Systemd deployment (contains real env vars)
 deploy/.env

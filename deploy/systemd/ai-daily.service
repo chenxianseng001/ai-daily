@@ -7,19 +7,16 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 User=YOUR_USER                     # ← 修改为你的用户名
-Group=YOUR_USER                    # ← 修改为你的用户组
-WorkingDirectory=/opt/ai-daily/app # ← 修改为你的部署目录
+Group=YOUR_USER
+WorkingDirectory=/opt/ai-daily/app
 ExecStart=/opt/ai-daily/venv/bin/python3 /opt/ai-daily/app/run_daily.py
-                                   #    ^^^ 使用 venv Python
 StandardOutput=journal
 StandardError=journal
 LogRateLimitIntervalSec=0
 TimeoutStartSec=600
 
-# 飞书投递配置（可选）
-#Environment=FEISHU_APP_ID=cli_your_app_id
-#Environment=FEISHU_APP_SECRET=your_app_secret
-#Environment=FEISHU_HOME_CHANNEL=oc_your_chat_id
+# 从 .env 文件加载环境变量（避免在 systemd 配置中写入明文 Secret）
+EnvironmentFile=/opt/ai-daily/.env
 
 NoNewPrivileges=true
 PrivateTmp=true
