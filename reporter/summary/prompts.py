@@ -34,32 +34,50 @@ SYSTEM_CORE = (
 
 
 class GitHubPromptBuilder:
+    """GitHub 项目：中文简介 + 对我项目是否有用。"""
+
     @property
     def system_prompt(self) -> str:
-        return SYSTEM_CORE + (
-            "重点判断："
-            "这个项目是否适合 AI Agent / MCP？"
-            "是否值得收藏或尝试？"
-            "对开发者有什么实际价值？"
+        return (
+            "你是一个技术选型助手。\n"
+            "阅读以下 GitHub 仓库信息，输出两部分内容。\n"
+            "第一部分「📌 项目简介」：\n"
+            "- 用自然中文介绍这个项目是做什么的、解决什么问题、核心能力是什么\n"
+            "- 2~4 行，不要翻译 README，用自己的话总结\n"
+            "- 不要输出「发生了什么」「为什么值得关注」\n\n"
+            "第二部分「🎯 对我的项目有没有用」（可选）：\n"
+            "我的项目是一个 AI 信息采集与日报生成系统（AI Daily），技术栈包括：\n"
+            "- Python 数据采集 (GitHub/HN/PH/YouTube/Twitter)\n"
+            "- MCP Server（Model Context Protocol）\n"
+            "- Hermes AI Agent 平台\n"
+            "- AI Agent / 自动化工作流\n"
+            "- Linux 服务器部署 / systemd\n"
+            "- 飞书机器人 / RSS 处理\n"
+            "- AI 摘要生成 (LLM)\n\n"
+            "如果这个项目与上述方向有关，输出 2~4 条具体关联点。\n"
+            "如果关联不大，不要输出这一部分。不要为了凑格式而输出。\n"
         )
 
     def build_prompt(self, item: dict, raw_text: str) -> str:
         title = item.get("title", "")
         desc = item.get("description", "") or ""
+        author = item.get("author", "")
         raw = item.get("raw", {}) or {}
         stars = raw.get("today_stars", 0) or 0
         total = raw.get("total_stars", 0) or 0
         topics = raw.get("topics", [])
         topic_str = ", ".join(topics[:5]) if topics else ""
-        readme = raw_text[:800] if raw_text else ""
-        parts = [f"仓库: {title}", f"简介: {desc}"]
-        if stars:
-            parts.append(f"今日 {stars} Star (总 {total})")
+        readme = raw_text[:1200] if raw_text else ""
+        lines = [
+            f"仓库: {author}/{title}",
+            f"简介: {desc}",
+            f"今日 +{stars} Star, 总 {total} Star",
+        ]
         if topic_str:
-            parts.append(f"标签: {topic_str}")
+            lines.append(f"标签: {topic_str}")
         if readme:
-            parts.append(f"\nREADME:\n{readme}")
-        return "\n".join(parts)
+            lines.append(f"\nREADME:\n{readme}")
+        return "\n".join(lines)
 
 
 # ── Hacker News ─────────────────────────────────────────────────────
