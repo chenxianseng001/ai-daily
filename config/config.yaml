@@ -90,11 +90,20 @@ summary:
   #   gemini       — Google Gemini
   #   claude       — Anthropic Claude
   #
+  # 留空则使用 AI_SUMMARY_PROVIDER 环境变量（推荐通过 systemd 配置）
+  provider: ""
+
+  # 模型名称（留空使用默认值）
+  model: ""
+
+  # API Key（留空则使用 AI_SUMMARY_API_KEY 环境变量）
+  api_key: ""
+
+  # 自定义 API 端点（仅当需要覆盖默认 endpoint 时使用）
+  endpoint: ""
+  #
   # 任意 OpenAI 兼容 endpoint:
   #   设置 provider=openai, 并配置 endpoint 和 api_key
-  provider: openai
-
-  # 模型名称（默认值取决于 provider，通常无需填写）
   model: ""
 
   # API Key（或通过 AI_SUMMARY_API_KEY 环境变量设置）
